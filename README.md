@@ -1,150 +1,170 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
-#define MAX 15
+
+🧠 Simulador de Escalonamento de Processos (SRT e Round Robin)
+
+📘 Descrição do Projeto
+
+Este programa em linguagem C simula dois dos principais algoritmos de escalonamento de processos utilizados em sistemas operacionais:
+
+SRT (Shortest Remaining Time) — Executa sempre o processo com o menor tempo restante de CPU, podendo haver preempção quando chega um processo menor.
+
+Round Robin (RR) — Distribui o tempo da CPU de forma justa e cíclica, utilizando um quantum (tempo máximo de execução) para cada processo.
+
+
+O objetivo é visualizar, de maneira didática, como cada algoritmo organiza os processos ao longo do tempo, exibindo uma timeline detalhada do estado da CPU e da fila de prontos.
+
+
+---
+
+⚙️ Como Compilar
+
+No terminal (Linux, macOS) ou no Prompt de Comando (Windows), digite:
+
+gcc simulador.c -o simulador
+
+Para executar o programa:
+
+./simulador
+
+
+---
+
+🧩 Estruturas Utilizadas
+
+O programa usa um vetor estático de até 15 processos, definidos pela seguinte estrutura:
 
 typedef struct {
-    char nome[30];
+    char nome[16];
     int chegada;
     int cpu_total;
     int restante;
     int finalizado;
 } Processo;
 
-void entradaProcessos(Processo p[], int *n) {
-    int i;
+Cada campo representa:
 
-    do {
-        printf("Quantos processos? ");
-        scanf("%d", n);
+nome → Nome do processo (ex: "P1", "TarefaA")
 
-        if (*n > MAX)
-            printf("Erro: número máximo de processos é %d. Tente novamente.\n", MAX);
-        else if (*n < 1)
-            printf("Erro: é necessário informar pelo menos 1 processo. Tente novamente.\n");
+chegada → Tempo em que o processo chega ao sistema
 
-    } while (*n < 1 || *n > MAX);
+cpu_total → Tempo total necessário de CPU
 
-    for (i = 0; i < *n; i++) {
-        printf("Processo %d:\n", i + 1);
-        printf("\tNome: ");
-        scanf("%s", p[i].nome);
-        printf("\tTempo de chegada: ");
-        scanf("%d", &p[i].chegada);
-        printf("\tTempo de CPU: ");
-        scanf("%d", &p[i].cpu_total);
-        p[i].restante = p[i].cpu_total;
-        p[i].finalizado = 0;
-    }
-}
+restante → Tempo restante até a conclusão
 
-int processosRestantes(Processo p[], int n) {
-    for (int i = 0; i < n; i++)
-        if (!p[i].finalizado) return 1;
-    return 0;
-}
+finalizado → Flag (0 = em execução / 1 = concluído)
 
-void printTimeline(Processo p[], int n, int tempo, int atual) {
-    printf("Tempo %d | Na fila: ", tempo);
-    for (int i = 0; i < n; i++) {
-        if (!p[i].finalizado && p[i].chegada <= tempo)
-            printf("%s(restante:%d) ", p[i].nome, p[i].restante);
-    }
-    if (atual >= 0)
-        printf("| Executando: %s\n", p[atual].nome);
-    else
-        printf("| Executando: (idle)\n");
-}
 
-void simulacaoSRT(Processo p[], int n) {
-    int tempo = 0;
-    while (processosRestantes(p, n)) {
-        int menor = -1, i;
-        for (i = 0; i < n; i++) {
-            if (!p[i].finalizado && p[i].chegada <= tempo) {
-                if (menor == -1 || p[i].restante < p[menor].restante)
-                    menor = i;
-            }
-        }
-        printTimeline(p, n, tempo, menor);
-        if (menor == -1) {
-            tempo++;
-            continue;
-        }
-        p[menor].restante--;
-        if (p[menor].restante == 0) p[menor].finalizado = 1;
-        tempo++;
-    }
-}
 
-void simulacaoRR(Processo p[], int n, int quantum) {
-    int tempo = 0, completados = 0, i, fila[MAX], ini = 0, fim = 0, emfila[MAX] = {0};
-    while (completados < n) {
-        
-        for (i = 0; i < n; i++) {
-            if (!emfila[i] && !p[i].finalizado && p[i].chegada <= tempo) {
-                fila[fim++] = i;
-                emfila[i] = 1;
-            }
-        }
-        if (ini == fim) { 
-            printTimeline(p, n, tempo, -1);
-            tempo++;
-            continue;
-        }
-        int atual = fila[ini++];
-        int rodou = 0;
-        for (i = 0; i < quantum && p[atual].restante > 0; i++) {
-            printTimeline(p, n, tempo, atual);
-            p[atual].restante--;
-            tempo++;
-            rodou = 1;
-            
-            for (int j = 0; j < n; j++) {
-                if (!emfila[j] && !p[j].finalizado && p[j].chegada <= tempo) {
-                    fila[fim++] = j;
-                    emfila[j] = 1;
-                }
-            }
-        }
-        if (p[atual].restante == 0) {
-            p[atual].finalizado = 1;
-            completados++;
-        } else if (rodou) { // volta para fila
-            fila[fim++] = atual;
-        }
-    }
-}
+---
 
-int main() {
-    Processo processos[MAX];
-    int n, tipo, quantum;
-    
-    do {
-        printf("Escolha um algoritmo:\n1. SRT\n2. Round Robin\nOpcao: ");
-        scanf("%d", &tipo);
+🧮 Algoritmos Implementados
 
-        if (tipo != 1 && tipo != 2)
-            printf("Erro: opção inválida! Escolha 1 para SRT ou 2 para Round Robin.\n");
+🔹 1. SRT (Shortest Remaining Time)
 
-    } while (tipo != 1 && tipo != 2);
+Escolhe o processo com menor tempo restante.
 
-    entradaProcessos(processos, &n);
+Se um processo novo chega com tempo menor, ocorre preempção imediata.
 
-    if (tipo == 2) {
-        
-        do {
-            printf("Informe o quantum (maior que 0): ");
-            scanf("%d", &quantum);
-            if (quantum <= 0)
-                printf("Erro: o quantum deve ser maior que 0. Tente novamente.\n");
-        } while (quantum <= 0);
+A contagem de tempo é feita unidade por unidade (1 unidade = 1 ciclo de CPU).
 
-        simulacaoRR(processos, n, quantum);
-    } else {
-        simulacaoSRT(processos, n);
-    }
 
-    return 0;
-}
+Características:
+
+Algoritmo preemptivo.
+
+Minimiza o tempo médio de espera.
+
+Pode causar injustiça com processos longos.
+
+
+
+---
+
+🔹 2. Round Robin (RR)
+
+Cada processo recebe um quantum, que é o tempo máximo de execução por ciclo.
+
+Quando o tempo do quantum termina e o processo ainda não acabou, ele volta para o final da fila.
+
+Ideal para sistemas multitarefa e ambientes interativos.
+
+
+Características:
+
+Algoritmo justo (todos os processos têm oportunidade de rodar).
+
+O desempenho depende do tamanho do quantum.
+
+Implementação simples e eficiente.
+
+
+
+---
+
+🧾 Exemplo de Execução
+
+🔸 Entrada:
+
+1              ← algoritmo (1 = SRT, 2 = RR)
+3              ← número de processos
+P1
+0
+5
+P2
+2
+3
+P3
+4
+2
+
+🔸 Saída esperada (SRT):
+
+===== INICIO DA SIMULACAO SRT =====
+
+Tempo 0 | Na fila: P1(restante:5) | Executando: P1
+Tempo 1 | Na fila: P1(restante:4) | Executando: P1
+Tempo 2 | Na fila: P1(restante:3) P2(restante:3) | Executando: P2
+Tempo 3 | Na fila: P1(restante:3) | Executando: P2
+Tempo 4 | Na fila: P1(restante:3) P3(restante:2) | Executando: P3
+Tempo 5 | Na fila: P1(restante:3) | Executando: P3
+Tempo 6 | Na fila:  | Executando: P1
+Tempo 7 | Na fila:  | Executando: P1
+Tempo 8 | Na fila:  | Executando: P1
+
+===== FIM DA SIMULACAO SRT =====
+Tempo total de execução: 9 unidades.
+
+
+---
+
+📊 Saída Explicada
+
+Cada linha da simulação mostra o tempo atual, os processos prontos e o processo em execução:
+
+Tempo X | Na fila: [processos prontos com tempo restante] | Executando: [processo atual]
+
+Exemplo:
+
+Tempo 2 | Na fila: P1(restante:3) | Executando: P2
+
+➡ Significa que no tempo 2, o processo P2 está em execução, enquanto P1 aguarda na fila com 3 unidades restantes.
+
+
+---
+
+🧠 Diferenciais do Código
+
+✅ Estrutura modular e organizada (funções separadas por responsabilidade)
+✅ Validações completas — impede entradas inválidas e repete perguntas até serem válidas
+✅ Saída visual e explicativa (excelente para apresentações acadêmicas)
+✅ Não reseta variáveis — simulações independentes e coerentes
+✅ Código compatível com qualquer compilador C
+✅ Pronto para expansão (ex: FCFS, SJF, Prioridades, etc.)
+
+
+---
+
+👨‍💻 Autor(a)
+
+Drika Silva
+💡 Simulador acadêmico desenvolvido para fins educacionais.
