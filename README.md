@@ -119,7 +119,6 @@ P3
 
 🔸 Saída esperada (SRT):
 
-===== INICIO DA SIMULACAO SRT =====
 
 Tempo 0 | Na fila: P1(restante:5) | Executando: P1
 Tempo 1 | Na fila: P1(restante:4) | Executando: P1
@@ -130,9 +129,6 @@ Tempo 5 | Na fila: P1(restante:3) | Executando: P3
 Tempo 6 | Na fila:  | Executando: P1
 Tempo 7 | Na fila:  | Executando: P1
 Tempo 8 | Na fila:  | Executando: P1
-
-===== FIM DA SIMULACAO SRT =====
-Tempo total de execução: 9 unidades.
 
 
 ---
@@ -166,5 +162,5 @@ Tempo 2 | Na fila: P1(restante:3) | Executando: P2
 
 👨‍💻 Autor(a)
 
-Drika Silva
+Adriele Castro Silva 
 💡 Simulador acadêmico desenvolvido para fins educacionais.
