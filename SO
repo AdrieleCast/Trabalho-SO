@@ -1,0 +1,153 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define MAX 15
+
+typedef struct {
+    char nome[30];
+    int chegada;
+    int cpu_total;
+    int restante;
+    int finalizado;
+} Processo;
+
+void entradaProcessos(Processo p[], int *n) {
+    int i;
+
+    
+    do {
+        printf("Quantos processos? ");
+        scanf("%d", n);
+
+        if (*n > MAX)
+            printf("Erro: número máximo de processos é %d. Tente novamente.\n", MAX);
+        else if (*n < 1)
+            printf("Erro: é necessário informar pelo menos 1 processo. Tente novamente.\n");
+
+    } while (*n < 1 || *n > MAX);
+
+    for (i = 0; i < *n; i++) {
+        printf("Processo %d:\n", i + 1);
+        printf("\tNome: ");
+        scanf("%s", p[i].nome);
+        printf("\tTempo de chegada: ");
+        scanf("%d", &p[i].chegada);
+        printf("\tTempo de CPU: ");
+        scanf("%d", &p[i].cpu_total);
+        p[i].restante = p[i].cpu_total;
+        p[i].finalizado = 0;
+    }
+}
+
+int processosRestantes(Processo p[], int n) {
+    for (int i = 0; i < n; i++)
+        if (!p[i].finalizado) return 1;
+    return 0;
+}
+
+void printTimeline(Processo p[], int n, int tempo, int atual) {
+    printf("Tempo %d | Na fila: ", tempo);
+    for (int i = 0; i < n; i++) {
+        if (!p[i].finalizado && p[i].chegada <= tempo)
+            printf("%s(restante:%d) ", p[i].nome, p[i].restante);
+    }
+    if (atual >= 0)
+        printf("| Executando: %s\n", p[atual].nome);
+    else
+        printf("| Executando: (idle)\n");
+}
+
+
+void simulacaoSRT(Processo p[], int n) {
+    int tempo = 0;
+    while (processosRestantes(p, n)) {
+        int menor = -1, i;
+        for (i = 0; i < n; i++) {
+            if (!p[i].finalizado && p[i].chegada <= tempo) {
+                if (menor == -1 || p[i].restante < p[menor].restante)
+                    menor = i;
+            }
+        }
+        printTimeline(p, n, tempo, menor);
+        if (menor == -1) {
+            tempo++;
+            continue;
+        }
+        p[menor].restante--;
+        if (p[menor].restante == 0) p[menor].finalizado = 1;
+        tempo++;
+    }
+}
+
+
+void simulacaoRR(Processo p[], int n, int quantum) {
+    int tempo = 0, completados = 0, i, fila[MAX], ini = 0, fim = 0, emfila[MAX] = {0};
+  
+        for (i = 0; i < n; i++) {
+            if (!emfila[i] && !p[i].finalizado && p[i].chegada <= tempo) {
+                fila[fim++] = i;
+                emfila[i] = 1;
+            }
+        }
+        if (ini == fim) {
+            printTimeline(p, n, tempo, -1);
+            tempo++;
+            continue;
+        }
+        int atual = fila[ini++];
+        int rodou = 0;
+        for (i = 0; i < quantum && p[atual].restante > 0; i++) {
+            printTimeline(p, n, tempo, atual);
+            p[atual].restante--;
+            tempo++;
+            rodou = 1;
+            
+            for (int j = 0; j < n; j++) {
+                if (!emfila[j] && !p[j].finalizado && p[j].chegada <= tempo) {
+                    fila[fim++] = j;
+                    emfila[j] = 1;
+                }
+            }
+        }
+        if (p[atual].restante == 0) {
+            p[atual].finalizado = 1;
+            completados++;
+        } else if (rodou) { 
+            fila[fim++] = atual;
+        }
+    }
+}
+
+int main() {
+    Processo processos[MAX];
+    int n, tipo, quantum;
+
+    
+    do {
+        printf("Escolha um algoritmo:\n1. SRT\n2. Round Robin\nOpcao: ");
+        scanf("%d", &tipo);
+
+        if (tipo != 1 && tipo != 2)
+            printf("Erro: opção inválida! Escolha 1 para SRT ou 2 para Round Robin.\n");
+
+    } while (tipo != 1 && tipo != 2);
+
+    entradaProcessos(processos, &n);
+
+    if (tipo == 2) {
+        
+        do {
+            printf("Informe o quantum (maior que 0): ");
+            scanf("%d", &quantum);
+            if (quantum <= 0)
+                printf("Erro: o quantum deve ser maior que 0. Tente novamente.\n");
+        } while (quantum <= 0);
+
+        simulacaoRR(processos, n, quantum);
+    } else {
+        simulacaoSRT(processos, n);
+    }
+
+    return 0;
+}
