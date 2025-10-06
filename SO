@@ -83,14 +83,15 @@ void simulacaoSRT(Processo p[], int n) {
 
 void simulacaoRR(Processo p[], int n, int quantum) {
     int tempo = 0, completados = 0, i, fila[MAX], ini = 0, fim = 0, emfila[MAX] = {0};
-  
+    while (completados < n) {
+        
         for (i = 0; i < n; i++) {
             if (!emfila[i] && !p[i].finalizado && p[i].chegada <= tempo) {
                 fila[fim++] = i;
                 emfila[i] = 1;
             }
         }
-        if (ini == fim) {
+        if (ini == fim) { // sem processos prontos
             printTimeline(p, n, tempo, -1);
             tempo++;
             continue;
@@ -151,3 +152,4 @@ int main() {
 
     return 0;
 }
+
