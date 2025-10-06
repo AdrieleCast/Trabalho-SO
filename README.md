@@ -15,7 +15,6 @@ typedef struct {
 void entradaProcessos(Processo p[], int *n) {
     int i;
 
-    // Loop até número de processos válido
     do {
         printf("Quantos processos? ");
         scanf("%d", n);
@@ -58,7 +57,6 @@ void printTimeline(Processo p[], int n, int tempo, int atual) {
         printf("| Executando: (idle)\n");
 }
 
-// SRT
 void simulacaoSRT(Processo p[], int n) {
     int tempo = 0;
     while (processosRestantes(p, n)) {
@@ -80,18 +78,17 @@ void simulacaoSRT(Processo p[], int n) {
     }
 }
 
-// Round Robin
 void simulacaoRR(Processo p[], int n, int quantum) {
     int tempo = 0, completados = 0, i, fila[MAX], ini = 0, fim = 0, emfila[MAX] = {0};
     while (completados < n) {
-        // Adiciona à fila processos novos
+        
         for (i = 0; i < n; i++) {
             if (!emfila[i] && !p[i].finalizado && p[i].chegada <= tempo) {
                 fila[fim++] = i;
                 emfila[i] = 1;
             }
         }
-        if (ini == fim) { // sem processos prontos
+        if (ini == fim) { 
             printTimeline(p, n, tempo, -1);
             tempo++;
             continue;
@@ -103,7 +100,7 @@ void simulacaoRR(Processo p[], int n, int quantum) {
             p[atual].restante--;
             tempo++;
             rodou = 1;
-            // Adiciona à fila processos novos no tempo atual
+            
             for (int j = 0; j < n; j++) {
                 if (!emfila[j] && !p[j].finalizado && p[j].chegada <= tempo) {
                     fila[fim++] = j;
@@ -123,8 +120,7 @@ void simulacaoRR(Processo p[], int n, int quantum) {
 int main() {
     Processo processos[MAX];
     int n, tipo, quantum;
-
-    // Loop até escolher opção válida
+    
     do {
         printf("Escolha um algoritmo:\n1. SRT\n2. Round Robin\nOpcao: ");
         scanf("%d", &tipo);
@@ -137,7 +133,7 @@ int main() {
     entradaProcessos(processos, &n);
 
     if (tipo == 2) {
-        // Loop para validar quantum positivo
+        
         do {
             printf("Informe o quantum (maior que 0): ");
             scanf("%d", &quantum);
